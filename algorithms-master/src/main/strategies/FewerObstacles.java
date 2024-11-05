@@ -1,6 +1,8 @@
 package main.strategies;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import main.game.map.Map;
 import main.game.map.Point;
@@ -10,6 +12,8 @@ public class FewerObstacles implements Strategy {
 	/**
 	 * N is the next location p1 p2 p3 p4 N p5 p6 p7 p8
 	 */
+
+	private Set<Point> visitedPoints = new HashSet<>(); // Armazena pontos já visitados
 
 	@Override
 	public Point evaluatePossbileNextStep(List<Point> possibleNextSteps, Map map) {
@@ -29,7 +33,11 @@ public class FewerObstacles implements Strategy {
 
 		// Se houver um tesouro seguro, escolha o melhor passo em direção a ele
 		if (safestTreasure != null) {
-			return getBestStepTowardsTreasure(possibleNextSteps, safestTreasure, map);
+			Point bestStep = getBestStepTowardsTreasure(possibleNextSteps, safestTreasure, map);
+			if (bestStep != null) {
+				visitedPoints.add(bestStep); // Adiciona o ponto escolhido aos pontos visitados
+			}
+			return bestStep;
 		}
 
 		return null; // Retorna null se não houver tesouros
@@ -57,7 +65,8 @@ public class FewerObstacles implements Strategy {
 
 		// Itera sobre os passos seguros possíveis
 		for (Point step : possibleNextSteps) {
-			if (isStepValid(step, map)) { // Verifica se o passo é válido (sem barreiras e seguro)
+			if (isStepValid(step, map) && !visitedPoints.contains(step)) { // Verifica se o passo é válido e não
+																			// visitado
 				double distance = calculateDistance(step, treasure); // Calcula a distância até o tesouro mais seguro
 
 				// Se a distância for menor que a menor distância registrada
