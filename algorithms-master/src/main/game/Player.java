@@ -11,29 +11,31 @@ import main.strategies.Strategy;
 public class Player {
 	public static final String CHARACTER = "W";
 	private Strategy strategy;
+
 	public Player(Strategy strategy) {
 		this.strategy = strategy;
 	}
-	
+
 	public Point evaluatePossbileNextStep(Map map) {
 		Point robotLocation = map.getRobotLocation();
 		List<Point> possibleNextSteps = new ArrayList<>();
-		possibleNextSteps.add(new Point(robotLocation.getPositionX(), robotLocation.getPositionY() + 1));
-		possibleNextSteps.add(new Point(robotLocation.getPositionX() + 1, robotLocation.getPositionY()));
-		possibleNextSteps.add(new Point(robotLocation.getPositionX() - 1, robotLocation.getPositionY()));
-		possibleNextSteps.add(new Point(robotLocation.getPositionX(), robotLocation.getPositionY() - 1));
-		
-		List<Point> result = new LinkedList<Point>();
-		// Filter impossible next steps
-		for (int i = 0; i < possibleNextSteps.size(); i++) {
-			Point p = possibleNextSteps.get(i);
-			int[] scenarioSize = map.getScenarioSize();
-			if (p.getPositionX() >= 0 && p.getPositionY() >= 0 &&
-					p.getPositionX() < scenarioSize[0] && p.getPositionY() < scenarioSize[1]) {
-				result.add(p);
+
+		// Definir movimentos possíveis
+		possibleNextSteps.add(new Point(robotLocation.getPositionX(), robotLocation.getPositionY() + 1)); // direita
+		possibleNextSteps.add(new Point(robotLocation.getPositionX() + 1, robotLocation.getPositionY())); // abaixo
+		possibleNextSteps.add(new Point(robotLocation.getPositionX() - 1, robotLocation.getPositionY())); // acima
+		possibleNextSteps.add(new Point(robotLocation.getPositionX(), robotLocation.getPositionY() - 1)); // esquerda
+
+		// Filtrar pontos seguros (sem monstros ou rochas)
+		List<Point> safeSteps = new LinkedList<>();
+		for (Point step : possibleNextSteps) {
+			if (map.isWithinBounds(step) && map.isSafePoint(step)) { // Verifica limites antes de verificar segurança
+				safeSteps.add(step);
 			}
 		}
-		return this.strategy.evaluatePossbileNextStep(result, map);
+
+		// Avaliar próximo passo com a estratégia
+		return this.strategy.evaluatePossbileNextStep(safeSteps, map);
 	}
 
 }

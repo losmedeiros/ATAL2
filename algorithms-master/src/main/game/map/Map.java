@@ -15,13 +15,16 @@ public class Map {
 
 	private String[][] scenario;
 	private Point robotLocation;
-
 	private HashMap<String, Point> treasureChests;
+	private int mapWidth; // Declaração de mapWidth
+	private int mapHeight; // Declaração de mapHeight
 
 	public Map(int scenarioSizeX, int scenarioSizeY) {
 		this.treasureChests = new HashMap<>();
 		this.scenario = new String[scenarioSizeX][scenarioSizeY];
 		this.robotLocation = new Point(0, 0);
+		this.mapWidth = scenarioSizeX; // Inicialização de mapWidth
+		this.mapHeight = scenarioSizeY; // Inicialização de mapHeight
 		this.generateMap();
 	}
 
@@ -243,4 +246,25 @@ public class Map {
 		return scenario[point.getPositionX()][point.getPositionY()] != null
 				&& scenario[point.getPositionX()][point.getPositionY()].equals(Monster.CHARACTER);
 	}
+
+	public boolean isSafePoint(Point point) {
+		String space = this.get(point);
+		return space == null || (!space.equals(Monster.CHARACTER) && !space.equals(Rock.CHARACTER));
+	}
+
+	public boolean isWithinBounds(Point point) {
+		return point.getPositionX() >= 0 && point.getPositionX() < mapWidth && point.getPositionY() >= 0
+				&& point.getPositionY() < mapHeight;
+	}
+	public List<Point> getAllTreasures() {
+        List<Point> treasureLocations = new ArrayList<>();
+        for (String key : treasureChests.keySet()) {
+            // Verifica se o baú contém um tesouro
+            if (key.equals(TreasureChest.CHEST_TRESURE_CHARACTER)) {
+                treasureLocations.add(treasureChests.get(key));
+            }
+        }
+        return treasureLocations; // Retorna a lista de locais dos tesouros
+    }
+
 }
