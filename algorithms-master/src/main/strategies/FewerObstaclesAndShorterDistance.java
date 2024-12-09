@@ -1,48 +1,73 @@
 package main.strategies;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import main.game.map.Map;
 import main.game.map.Point;
 
+// A classe agora implementa a interface Strategy
 public class FewerObstaclesAndShorterDistance implements Strategy {
 
-	@Override
-	public Point evaluatePossbileNextStep(List<Point> possibleNextSteps, Map map) {
-		Point treasureLocation = map.getTreasureLocation();
-		Point bestStep = null;
-		double bestScore = Double.MAX_VALUE;
+    private Set<Point> visitedPoints = new HashSet<>(); // Atributo para rastrear pontos visitados
 
-		for (Point step : possibleNextSteps) {
-			double distance = calculateDistance(step, treasureLocation);
-			int monsterCount = countNearbyMonsters(step, map);
+    @Override
+    public Point evaluatePossbileNextStep(List<Point> possibleSteps, Map map) {
+        if (possibleSteps == null || possibleSteps.isEmpty()) {
+            return null; // Sem movimento possível
+        }
 
-			double score = distance + (monsterCount * 2); // Peso maior para monstros
-			if (score < bestScore) {
-				bestScore = score;
-				bestStep = step;
-			}
-		}
+        Point robotLocation = map.getRobotLocation();
+        visitedPoints.add(robotLocation); // Marcar o ponto atual como visitado
 
-		return bestStep;
-	}
+        Point treasureMapLocation = map.findPointByChar('B');
+        Point treasureLocation = map.findPointByChar('F');
 
-	private double calculateDistance(Point p1, Point p2) {
-		return Math.sqrt(Math.pow(p1.getPositionX() - p2.getPositionX(), 2)
-				+ Math.pow(p1.getPositionY() - p2.getPositionY(), 2));
-	}
+        // Priorizar alcançar o "mapa do tesouro" (B)
+        if (treasureMapLocation != null && !visitedPoints.contains(treasureMapLocation)) {
+            return findShortestPathAvoidingVisited(possibleSteps, treasureMapLocation);
+        }
 
-	private int countNearbyMonsters(Point point, Map map) {
-		int count = 0;
-		List<Point> neighbors = map.getNeighbors(point);
+        // Após alcançar "B", revelar e priorizar "F"
+        if (treasureMapLocation != null && robotLocation.equals(treasureMapLocation)) {
+            map.revealTreasure(robotLocation); // Método fictício que revela o tesouro
+            treasureLocation = map.findPointByChar('F'); // Atualiza posição de "F"
+        }
 
-		for (Point neighbor : neighbors) {
-			if (map.isMonster(neighbor)) {
-				count++;
-			}
-		}
+        // Priorizar alcançar "F"
+        if (treasureLocation != null && !visitedPoints.contains(treasureLocation)) {
+            return findShortestPathAvoidingVisited(possibleSteps, treasureLocation);
+        }
 
-		return count;
-	}
+        // Escolher qualquer ponto seguro disponível como fallback
+        for (Point step : possibleSteps) {
+            if (!visitedPoints.contains(step)) {
+                return step;
+            }
+        }
 
+        return null; // Sem movimento viável
+    }
+
+    private Point findShortestPathAvoidingVisited(List<Point> possibleSteps, Point target) {
+        Point bestStep = null;
+        double shortestDistance = Double.MAX_VALUE;
+
+        for (Point step : possibleSteps) {
+            if (!visitedPoints.contains(step)) {
+                double distance = calculateDistance(step, target);
+                if (distance < shortestDistance) {
+                    shortestDistance = distance;
+                    bestStep = step;
+                }
+            }
+        }
+        return bestStep;
+    }
+
+    private double calculateDistance(Point a, Point b) {
+        return Math.sqrt(Math.pow(a.getPositionX() - b.getPositionX(), 2)
+                + Math.pow(a.getPositionY() - b.getPositionY(), 2));
+    }
 }

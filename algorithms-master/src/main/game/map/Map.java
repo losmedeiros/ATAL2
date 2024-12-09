@@ -161,6 +161,15 @@ public class Map {
 			}
 		}
 	}
+	public Point getPointAt(Point location) {
+	    if (isWithinBounds(location)) {
+	        int x = location.getPositionX();
+	        int y = location.getPositionY();
+	        String symbol = scenario[x][y]; // Obtém o símbolo no cenário
+	        return new Point(x, y, symbol != null ? symbol.charAt(0) : '*'); // Use '*' como padrão
+	    }
+	    return null; // Retorna null se estiver fora dos limites
+	}
 
 	public void print() {
 		for (int i = 0; i < scenario.length; i++) {
@@ -266,5 +275,23 @@ public class Map {
         }
         return treasureLocations; // Retorna a lista de locais dos tesouros
     }
+	public Point findPointByChar(char c) {
+	    for (int i = 0; i < scenario.length; i++) {
+	        for (int j = 0; j < scenario[i].length; j++) {
+	            if (scenario[i][j] != null && scenario[i][j].charAt(0) == c) {
+	                return new Point(i, j);
+	            }
+	        }
+	    }
+	    return null;
+	}
+	public void revealTreasure(Point location) {
+        // Lógica para revelar o tesouro, por exemplo:
+        if (getPointAt(location).getSymbol() == 'B') {
+            // Alterar o símbolo do mapa para revelar o tesouro
+            getPointAt(location).setSymbol('F');
+        }
+    }
+
 
 }

@@ -3,7 +3,7 @@ package main.game;
 import main.game.map.Map;
 import main.game.map.Point;
 import main.game.map.TreasureChest;
-import main.strategies.FewerObstacles;
+import main.strategies.FewerObstaclesAndShorterDistance;
 
 public class Game {
 	private Map map;
@@ -15,7 +15,7 @@ public class Game {
 		// Aqui você pode definir a estratégia desejada.
 		// Use FewerObstacles, FewerObstaclesAndShorterDistance, ShortestDistance
 		// ou Sort
-		this.player = new Player(new FewerObstacles());
+		this.player = new Player(new FewerObstaclesAndShorterDistance());
 	}
 
 	public void run() {
