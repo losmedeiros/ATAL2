@@ -161,14 +161,15 @@ public class Map {
 			}
 		}
 	}
+
 	public Point getPointAt(Point location) {
-	    if (isWithinBounds(location)) {
-	        int x = location.getPositionX();
-	        int y = location.getPositionY();
-	        String symbol = scenario[x][y]; // Obtém o símbolo no cenário
-	        return new Point(x, y, symbol != null ? symbol.charAt(0) : '*'); // Use '*' como padrão
-	    }
-	    return null; // Retorna null se estiver fora dos limites
+		if (isWithinBounds(location)) {
+			int x = location.getPositionX();
+			int y = location.getPositionY();
+			String symbol = scenario[x][y]; // Obtém o símbolo no cenário
+			return new Point(x, y, symbol != null ? symbol.charAt(0) : '*'); // Use '*' como padrão
+		}
+		return null; // Retorna null se estiver fora dos limites
 	}
 
 	public void print() {
@@ -265,33 +266,76 @@ public class Map {
 		return point.getPositionX() >= 0 && point.getPositionX() < mapWidth && point.getPositionY() >= 0
 				&& point.getPositionY() < mapHeight;
 	}
+
 	public List<Point> getAllTreasures() {
-        List<Point> treasureLocations = new ArrayList<>();
-        for (String key : treasureChests.keySet()) {
-            // Verifica se o baú contém um tesouro
-            if (key.equals(TreasureChest.CHEST_TRESURE_CHARACTER)) {
-                treasureLocations.add(treasureChests.get(key));
-            }
-        }
-        return treasureLocations; // Retorna a lista de locais dos tesouros
-    }
-	public Point findPointByChar(char c) {
+		List<Point> treasureLocations = new ArrayList<>();
+		for (String key : treasureChests.keySet()) {
+			// Verifica se o baú contém um tesouro
+			if (key.equals(TreasureChest.CHEST_TRESURE_CHARACTER)) {
+				treasureLocations.add(treasureChests.get(key));
+			}
+		}
+		return treasureLocations; // Retorna a lista de locais dos tesouros
+	}
+
+	public Point findPointByChar(String c) {
 	    for (int i = 0; i < scenario.length; i++) {
 	        for (int j = 0; j < scenario[i].length; j++) {
-	            if (scenario[i][j] != null && scenario[i][j].charAt(0) == c) {
+	            if (scenario[i][j] != null && scenario[i][j].equals(c)) {
 	                return new Point(i, j);
 	            }
 	        }
 	    }
 	    return null;
 	}
-	public void revealTreasure(Point location) {
-        // Lógica para revelar o tesouro, por exemplo:
-        if (getPointAt(location).getSymbol() == 'B') {
-            // Alterar o símbolo do mapa para revelar o tesouro
-            getPointAt(location).setSymbol('F');
-        }
-    }
+
+
+	public void revealTreasure(Map map) {
+	    // Supomos que o ponto de 'B' contém as coordenadas de 'F'
+	    Point coordinatesOfTreasure = getCoordinatesOfTreasure(); // Método fictício para pegar coordenadas
+	    if (coordinatesOfTreasure != null) {
+	        System.out.println("Revealing treasure coordinates: " + coordinatesOfTreasure);
+	        map.updateSymbol(coordinatesOfTreasure, TreasureChest.CHEST_TRESURE_CHARACTER); // Marca o 'F'
+	    } else {
+	        System.out.println("No treasure coordinates found!");
+	    }
+	}
+
+	// Método que retorna as coordenadas de F
+	private Point getCoordinatesOfTreasure() {
+	    // Simule como obter as coordenadas reais de 'F' a partir de 'B'
+	    return new Point(2, 3); // Exemplo estático
+	}
+
+	public void updateSymbol(Point location, String newSymbol) {
+	    int x = location.getPositionX();
+	    int y = location.getPositionY();
+
+	    if (scenario[x][y] != null) {
+	        scenario[x][y] = newSymbol;
+	    }
+	}
+	public String getObstacleAt(Point point) {
+	    if (isWithinBounds(point)) {
+	        String symbol = scenario[point.getPositionX()][point.getPositionY()];
+	        if (symbol != null && !symbol.equals("*")) {
+	            return symbol; // Retorna o símbolo do obstáculo (como rocha, monstro, etc.)
+	        }
+	    }
+	    return null; // Retorna null se não houver obstáculo
+	}
+	public Point findTreasureCoordinates() {
+	    for (int i = 0; i < scenario.length; i++) {
+	        for (int j = 0; j < scenario[i].length; j++) {
+	            if (scenario[i][j] != null && scenario[i][j].equals(TreasureChest.CHEST_TRESURE_CHARACTER)) {
+	                return new Point(i, j);
+	            }
+	        }
+	    }
+	    return null; // Retorna null caso não encontre
+	}
+
+
 
 
 }

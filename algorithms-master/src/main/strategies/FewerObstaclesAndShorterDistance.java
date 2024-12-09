@@ -5,12 +5,15 @@ import java.util.List;
 import java.util.Set;
 
 import main.game.map.Map;
+import main.game.map.MapOfTreasure;
 import main.game.map.Point;
+import main.game.map.TreasureChest;
 
-// A classe agora implementa a interface Strategy
+// A classe implementa a interface Strategy
 public class FewerObstaclesAndShorterDistance implements Strategy {
 
-    private Set<Point> visitedPoints = new HashSet<>(); // Atributo para rastrear pontos visitados
+    private Set<Point> visitedPoints = new HashSet<>(); // Rastreia os pontos visitados
+    private Point treasureCoordinates = null; // Coordenadas do tesouro reveladas
 
     @Override
     public Point evaluatePossbileNextStep(List<Point> possibleSteps, Map map) {
@@ -21,23 +24,39 @@ public class FewerObstaclesAndShorterDistance implements Strategy {
         Point robotLocation = map.getRobotLocation();
         visitedPoints.add(robotLocation); // Marcar o ponto atual como visitado
 
-        Point treasureMapLocation = map.findPointByChar('B');
-        Point treasureLocation = map.findPointByChar('F');
+        // Procurar a localização do mapa do tesouro (B)
+        Point treasureMapLocation = map.findPointByChar(MapOfTreasure.CHARACTER);
+
+        System.out.println("Robot location: " + robotLocation);
+        System.out.println("Treasure map (B) location: " + treasureMapLocation);
+        System.out.println("Revealed Treasure (F) coordinates: " + treasureCoordinates);
 
         // Priorizar alcançar o "mapa do tesouro" (B)
-        if (treasureMapLocation != null && !visitedPoints.contains(treasureMapLocation)) {
-            return findShortestPathAvoidingVisited(possibleSteps, treasureMapLocation);
+        if (treasureMapLocation != null && !robotLocation.equals(treasureMapLocation)) {
+            return findShortestPathAvoidingVisited(possibleSteps, treasureMapLocation, robotLocation);
         }
 
-        // Após alcançar "B", revelar e priorizar "F"
+        // Revelar o tesouro ao alcançar "B"
         if (treasureMapLocation != null && robotLocation.equals(treasureMapLocation)) {
-            map.revealTreasure(robotLocation); // Método fictício que revela o tesouro
-            treasureLocation = map.findPointByChar('F'); // Atualiza posição de "F"
+            System.out.println("Revealing treasure...");
+            Object obstacle = map.getObstacleAt(treasureMapLocation); // Obtenha o obstáculo (pode ser um objeto genérico)
+            
+            if (obstacle instanceof MapOfTreasure) { // Verifique se é do tipo MapOfTreasure
+                MapOfTreasure mapOfTreasure = (MapOfTreasure) obstacle;
+                treasureCoordinates = mapOfTreasure.getTreasureCoordinates();
+                System.out.println("Treasure coordinates revealed: " + treasureCoordinates);
+                map.updateSymbol(treasureCoordinates, TreasureChest.CHEST_TRESURE_CHARACTER); // Atualiza o mapa com 'F'
+            }
         }
 
-        // Priorizar alcançar "F"
-        if (treasureLocation != null && !visitedPoints.contains(treasureLocation)) {
-            return findShortestPathAvoidingVisited(possibleSteps, treasureLocation);
+        // Atualizar a localização do tesouro para busca
+        if (treasureCoordinates == null) {
+            treasureCoordinates = map.findTreasureCoordinates(); // Usar o método findTreasureCoordinates
+            System.out.println("Found treasure coordinates: " + treasureCoordinates);
+        }
+
+        if (treasureCoordinates != null && !robotLocation.equals(treasureCoordinates)) {
+            return findShortestPathAvoidingVisited(possibleSteps, treasureCoordinates, robotLocation);
         }
 
         // Escolher qualquer ponto seguro disponível como fallback
@@ -50,12 +69,13 @@ public class FewerObstaclesAndShorterDistance implements Strategy {
         return null; // Sem movimento viável
     }
 
-    private Point findShortestPathAvoidingVisited(List<Point> possibleSteps, Point target) {
+    // Atualizado para evitar o ponto anterior
+    private Point findShortestPathAvoidingVisited(List<Point> possibleSteps, Point target, Point previousLocation) {
         Point bestStep = null;
         double shortestDistance = Double.MAX_VALUE;
 
         for (Point step : possibleSteps) {
-            if (!visitedPoints.contains(step)) {
+            if (!visitedPoints.contains(step) && !step.equals(previousLocation)) {
                 double distance = calculateDistance(step, target);
                 if (distance < shortestDistance) {
                     shortestDistance = distance;
@@ -66,6 +86,8 @@ public class FewerObstaclesAndShorterDistance implements Strategy {
         return bestStep;
     }
 
+
+    // Calcula a distância euclidiana entre dois pontos
     private double calculateDistance(Point a, Point b) {
         return Math.sqrt(Math.pow(a.getPositionX() - b.getPositionX(), 2)
                 + Math.pow(a.getPositionY() - b.getPositionY(), 2));
