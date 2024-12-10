@@ -1,5 +1,8 @@
 package main.game.map;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Point {
     private String id;
     private int positionX;
@@ -79,5 +82,18 @@ public class Point {
                 ", weight=" + weight +
                 ", symbol=" + symbol +
                 '}';
+    }
+
+    // Adiciona o método getNeighbors para obter vizinhos diretos
+    public List<Point> getNeighbors() {
+        List<Point> neighbors = new ArrayList<>();
+        
+        // Adiciona vizinhos (cima, baixo, esquerda, direita)
+        neighbors.add(new Point(positionX, positionY - 1)); // Cima
+        neighbors.add(new Point(positionX, positionY + 1)); // Baixo
+        neighbors.add(new Point(positionX - 1, positionY)); // Esquerda
+        neighbors.add(new Point(positionX + 1, positionY)); // Direita
+        
+        return neighbors;
     }
 }

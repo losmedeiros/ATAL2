@@ -1,5 +1,6 @@
 package main.strategies;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +34,11 @@ public class FewerObstaclesAndShorterDistance implements Strategy {
 
         // Priorizar alcançar o "mapa do tesouro" (B)
         if (treasureMapLocation != null && !robotLocation.equals(treasureMapLocation)) {
-            return findShortestPathAvoidingVisited(possibleSteps, treasureMapLocation, robotLocation);
+            // Verificar caminho livre até o mapa do tesouro
+            List<Point> pathToTreasureMap = findPathToDestination(robotLocation, treasureMapLocation, map);
+            if (pathToTreasureMap != null && !pathToTreasureMap.isEmpty()) {
+                return pathToTreasureMap.get(0); // Seguir o próximo passo do caminho
+            }
         }
 
         // Revelar o tesouro ao alcançar "B"
@@ -46,6 +51,9 @@ public class FewerObstaclesAndShorterDistance implements Strategy {
                 treasureCoordinates = mapOfTreasure.getTreasureCoordinates();
                 System.out.println("Treasure coordinates revealed: " + treasureCoordinates);
                 map.updateSymbol(treasureCoordinates, TreasureChest.CHEST_TRESURE_CHARACTER); // Atualiza o mapa com 'F'
+
+                // Chama o método de salvar as coordenadas do tesouro
+                mapOfTreasure.saveTreasureCoordinates();  // Agora salva as coordenadas
             }
         }
 
@@ -56,7 +64,11 @@ public class FewerObstaclesAndShorterDistance implements Strategy {
         }
 
         if (treasureCoordinates != null && !robotLocation.equals(treasureCoordinates)) {
-            return findShortestPathAvoidingVisited(possibleSteps, treasureCoordinates, robotLocation);
+            // Verificar caminho livre até o tesouro
+            List<Point> pathToTreasure = findPathToDestination(robotLocation, treasureCoordinates, map);
+            if (pathToTreasure != null && !pathToTreasure.isEmpty()) {
+                return pathToTreasure.get(0); // Seguir o próximo passo do caminho
+            }
         }
 
         // Escolher qualquer ponto seguro disponível como fallback
@@ -69,27 +81,70 @@ public class FewerObstaclesAndShorterDistance implements Strategy {
         return null; // Sem movimento viável
     }
 
-    // Atualizado para evitar o ponto anterior
-    private Point findShortestPathAvoidingVisited(List<Point> possibleSteps, Point target, Point previousLocation) {
-        Point bestStep = null;
-        double shortestDistance = Double.MAX_VALUE;
+    // Encontra o caminho livre até o destino (sem obstáculos)
+    private List<Point> findPathToDestination(Point start, Point destination, Map map) {
+        Set<Point> visited = new HashSet<>();
+        visited.add(start);
 
-        for (Point step : possibleSteps) {
-            if (!visitedPoints.contains(step) && !step.equals(previousLocation)) {
-                double distance = calculateDistance(step, target);
-                if (distance < shortestDistance) {
-                    shortestDistance = distance;
-                    bestStep = step;
+        // Usar BFS ou DFS para encontrar o caminho
+        List<Point> queue = new ArrayList<>();
+        queue.add(start);
+
+        // Lista para armazenar o caminho
+        List<Point> path = new ArrayList<>();
+        boolean pathFound = false;
+
+        while (!queue.isEmpty()) {
+            Point current = queue.remove(0);
+
+            // Se chegou ao destino, caminho encontrado
+            if (current.equals(destination)) {
+                pathFound = true;
+                break;
+            }
+
+            // Adicionar vizinhos não visitados
+            for (Point neighbor : map.getNeighbors(current)) {
+                if (!visited.contains(neighbor) && map.isSafePoint(neighbor)) {
+                    visited.add(neighbor);
+                    queue.add(neighbor);
+                    // Guardar o caminho
+                    path.add(current);
                 }
             }
         }
-        return bestStep;
+
+        // Retornar o caminho, se encontrado
+        if (pathFound) {
+            return reconstructPath(path, destination, map); // Passando map aqui
+        }
+
+        return null; // Caminho não encontrado
     }
 
 
-    // Calcula a distância euclidiana entre dois pontos
-    private double calculateDistance(Point a, Point b) {
-        return Math.sqrt(Math.pow(a.getPositionX() - b.getPositionX(), 2)
-                + Math.pow(a.getPositionY() - b.getPositionY(), 2));
+    // Reconstruir o caminho a partir dos pontos encontrados
+    private List<Point> reconstructPath(List<Point> path, Point destination, Map map) {
+        List<Point> fullPath = new ArrayList<>();
+        Point current = destination;
+        while (current != null) {
+            fullPath.add(current);
+            current = getPreviousPoint(path, current, map); // Passando map aqui
+        }
+        java.util.Collections.reverse(fullPath);
+        return fullPath;
     }
+
+
+ // Obter o ponto anterior no caminho
+    private Point getPreviousPoint(List<Point> path, Point current, Map map) {
+        for (Point point : path) {
+            if (map.getNeighbors(point).contains(current)) {
+                return point;
+            }
+        }
+        return null;
+    }
+
+
 }
